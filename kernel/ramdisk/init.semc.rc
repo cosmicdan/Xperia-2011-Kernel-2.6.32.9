@@ -32,16 +32,6 @@ on post-fs
     # Remount system as rw for things to come...
     mount yaffs2 mtd@system /system rw remount
 
-    # Mount appslog as rw on /system/vendor
-    mkdir /system/vendor 0755 root shell
-    mount yaffs2 mtd@appslog /system/vendor
-    chown root shell /system/vendor
-    chmod 0755 /system/vendor
-
-    # Re-mount as read-only
-    mount yaffs2 mtd@appslog /system/vendor rw remount
-    mount yaffs2 mtd@system /system rw remount
-
 on early-boot
     # Start the offline charging (This blocks booting further in some cases)
     exec /system/bin/chargemon
