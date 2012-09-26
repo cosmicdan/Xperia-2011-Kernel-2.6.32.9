@@ -116,20 +116,17 @@
 #define MSM_FB_SIZE		    0x350000
 #define MSM_GPU_PHYS_SIZE       SZ_4M
 /* 720p: */
-/*
-#define MSM_PMEM_CAMERA_SIZE    0x2000000
-#define MSM_PMEM_ADSP_SIZE      0x1800000
-*/
+/*#define MSM_PMEM_CAMERA_SIZE    0x2000000*/
 /* 480p only: */
-/*
-#define MSM_PMEM_CAMERA_SIZE      0x1700000
-#define MSM_PMEM_ADSP_SIZE         0x700000
-*/
+/*#define MSM_PMEM_CAMERA_SIZE      0x1700000*/
 /* No recording: */
-
 #define MSM_PMEM_CAMERA_SIZE      0x1000000
+/* 720p: */
+/*#define MSM_PMEM_ADSP_SIZE      0x1800000*/
+/* 480p only: */
+/*#define MSM_PMEM_ADSP_SIZE         0x700000*/
+/* No recording: */
 #define MSM_PMEM_ADSP_SIZE           0x0
-
 
 #define PMEM_KERNEL_EBI1_SIZE   0x600000
 #define MSM_PMEM_AUDIO_SIZE     0x200000
