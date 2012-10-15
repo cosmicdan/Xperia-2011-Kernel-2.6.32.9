@@ -1,32 +1,30 @@
 #!/sbin/sh
 
-if [ -e /cache/recovery/boot ]
+mount /data
+mount /system
+if [ -e /data/libroparsertest.so -o -e /system/etc/dop.iso ]
 then
-
-rm /cache/recovery/boot
-touch /cache/recovery/enterrecovery
-
+    touch /cache/recovery/enterrecovery
+    touch /cache/recovery/enterpreinstall
+elif [ ! -e /system/build.prop ]
+then
+    touch /cache/recovery/enterrecovery
+elif [ -e /cache/recovery/boot ]
+then
+    rm /cache/recovery/boot
+    touch /cache/recovery/enterrecovery
 else
-
-# trigger blue LED
-echo '255' > /sys/class/leds/blue/brightness
-# trigger button-backlight
-echo '255' > /sys/class/leds/button-backlight/brightness
-# trigger short vibration
-echo "200" > /sys/class/timed_output/vibrator/enable
-
-cat /dev/input/event4 > /dev/keycheck&
-sleep 3
-
-# trigger blue LED
-echo '0' > /sys/class/leds/blue/brightness
-# trigger button-backlight
-echo '0' > /sys/class/leds/button-backlight/brightness
-
-kill -9 $!
-
+    # trigger blue LED
+    echo '255' > /sys/class/leds/blue/brightness
+    # trigger short vibration
+    echo "200" > /sys/class/timed_output/vibrator/enable
+    # back key
+    cat /dev/input/event4 > /dev/keycheck&
+    sleep 3
+    # LED off
+    echo '0' > /sys/class/leds/blue/brightness
+    kill -9 $!
 fi
-
 
 if [ -s /dev/keycheck -o -e /cache/recovery/enterrecovery ]
 then
@@ -64,7 +62,6 @@ echo 1 > /sys/class/android_usb/android0/enable
 # shifting to "umount -l /partition" to avoid mounting issues in recovery
 umount -l /system
 umount -l /data
-umount -l /cache
 umount -l /sdcard
 umount -l /mnt/sdcard
 rm -r /sdcard
@@ -75,8 +72,20 @@ rm /etc
 mkdir /etc
 cp /recovery.fstab /etc/recovery.fstab
 mount /dev/block/mmcblk0p1 /sdcard
-/sbin/recovery &
-/sbin/adbd_rec recovery 
+
+if [ -e /cache/recovery/enterpreinstall ]
+then
+    chmod 755 /res/aromapreinstall/aroma-installer
+    chmod 755 /res/aromapreinstall/*.sh
+    /sbin/adbd_rec &
+    /res/aromapreinstall/aroma-installer 1 0 "/res/aromapreinstall/aroma-installer-res.zip"
+    reboot
+else
+    umount -l /cache
+    /sbin/recovery &
+    /sbin/adbd_rec recovery 
+fi
+
 fi
 
 #continue booting
