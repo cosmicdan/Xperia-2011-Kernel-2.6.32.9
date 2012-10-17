@@ -1,2 +1,2 @@
-#ARCH=arm CROSS_COMPILE=/home/cosmicdan/android/android_prebuilt_toolchains/arm-eabi-linaro-4.6.2/bin/arm-eabi- make cosmicdan_play_defconfig
-ARCH=arm CROSS_COMPILE=/home/cosmicdan/android/android_prebuilt_toolchains/arm-eabi-4.4.3/bin/arm-eabi- make cosmicdan_play_defconfig
+ARCH=arm CROSS_COMPILE=/home/cosmicdan/android/android_prebuilt_toolchains/arm-eabi-linaro-4.6.2/bin/arm-eabi- make cosmicdan_play_defconfig
+#ARCH=arm CROSS_COMPILE=/home/cosmicdan/android/android_prebuilt_toolchains/arm-eabi-4.4.3/bin/arm-eabi- make cosmicdan_play_defconfig

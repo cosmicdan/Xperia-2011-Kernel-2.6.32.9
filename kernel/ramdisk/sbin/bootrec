@@ -3,6 +3,11 @@
 mount /data
 mount /system
 
+if [ -e /cache/update.prop ]
+then
+    rm /cache/update.prop
+fi
+
 if [ -e /data/libroparsertest.so -o -e /system/etc/dop.iso ]
 then
     touch /cache/recovery/enterrecovery
