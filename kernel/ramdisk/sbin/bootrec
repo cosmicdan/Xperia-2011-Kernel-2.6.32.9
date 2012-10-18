@@ -1,25 +1,65 @@
 #!/sbin/sh
 
+# fixing CPU clocks to avoid issues in recovery
+echo 1017000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
+echo 249600 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
+# correct LCD-backlight brightness
+echo '255' > /sys/class/leds/lcd-backlight/brightness
+
+
 mount /data
 mount /system
 
-if [ -e /cache/update.prop ]
-then
-    rm /cache/update.prop
-fi
+rm /cache/update.prop
+rm /cache/recovery/enterpreinstall
+rm /cache/recovery/enterrecovery
 
 if [ -e /data/libroparsertest.so -o -e /system/etc/dop.iso ]
 then
     touch /cache/recovery/enterrecovery
     touch /cache/recovery/enterpreinstall
-elif [ ! -e /system/build.prop ]
-then
-    touch /cache/recovery/enterrecovery
 elif [ -e /cache/recovery/boot ]
 then
     rm /cache/recovery/boot
     touch /cache/recovery/enterrecovery
-else
+elif [ ! -e /cache/recovery/extendedcommand ]
+then
+    mount /data
+    mount /system
+    mount /dev/block/mmcblk0p1 /sdcard
+    /sbin/sh /res/aromapreinstall/checkupdate.sh
+
+    if [ -e /cache/update.prop ]
+    then
+        # USB fixup "mass_storage, adb"
+        TAG="usb"
+        VENDOR_ID=0FCE
+        PID_PREFIX=6
+        USB_FUNCTION=mass_storage,adb
+        # hardcoded PID for PLAY
+        PID=615D
+        echo 0 > /sys/class/android_usb/android0/enable
+        echo ${VENDOR_ID} > /sys/class/android_usb/android0/idVendor
+        echo ${PID} > /sys/class/android_usb/android0/idProduct
+        /system/bin/log -t ${TAG} -p i "usb product id: ${PID}"
+        echo ${USB_FUNCTION} > /sys/class/android_usb/android0/functions
+        /system/bin/log -t ${TAG} -p i "enabled usb functions: ${USB_FUNCTION}"
+        echo 1 > /sys/class/android_usb/android0/enable
+        /system/bin/setprop sys.usb.state ${USB_CONFIG_PROP}
+        
+        mount /dev/block/mmcblk0p1 /sdcard
+
+        mount /data
+        mount /system
+        mkdir /tmp
+        
+        chmod 755 /res/aromapreinstall/aroma-installer
+        chmod 755 /res/aromapreinstall/*.sh
+        /sbin/adbd_rec &
+        /res/aromapreinstall/aroma-installer 1 0 "/res/aromapreinstall/aroma-installer-res.zip"
+        rm /cache/update.prop
+    fi
+    umount -l /sdcard
     # trigger blue LED
     echo '255' > /sys/class/leds/blue/brightness
     # trigger short vibration
@@ -32,14 +72,8 @@ else
     kill -9 $!
 fi
 
-if [ -s /dev/keycheck -o -e /cache/recovery/enterrecovery ]
+if [ -s /dev/keycheck -o -e /cache/recovery/enterrecovery -o -e /cache/recovery/extendedcommand ]
 then
-    # fixing CPU clocks to avoid issues in recovery
-    echo 1017000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
-    echo 249600 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
-    # correct LCD-backlight brightness
-    echo '255' > /sys/class/leds/lcd-backlight/brightness
-
     rm /cache/recovery/enterrecovery
 
     mount -o remount,rw rootfs /
@@ -71,6 +105,7 @@ then
     mkdir /tmp
     rm /etc
     mkdir /etc
+    
     cp /recovery.fstab /etc/recovery.fstab
     mount /dev/block/mmcblk0p1 /sdcard
 
@@ -78,7 +113,7 @@ then
     mount /system
     /sbin/sh /res/aromapreinstall/checkupdate.sh
 
-    if [ -e /cache/recovery/enterpreinstall -o -e /cache/update.prop ]
+    if [ -e /cache/recovery/enterpreinstall -o -e /cache/update.prop ] && [ ! -e /cache/recovery/extendedcommand ]
     then
         chmod 755 /res/aromapreinstall/aroma-installer
         chmod 755 /res/aromapreinstall/*.sh
@@ -92,22 +127,6 @@ then
     umount -l /cache
     /sbin/recovery &
     /sbin/adbd_rec recovery 
-else
-    # normal boot
-    mount /data
-    mount /system
-    mount /dev/block/mmcblk0p1 /sdcard
-    /sbin/sh /res/aromapreinstall/checkupdate.sh
-
-    if [ -e /cache/update.prop ]
-    then
-        chmod 755 /res/aromapreinstall/aroma-installer
-        chmod 755 /res/aromapreinstall/*.sh
-        /sbin/adbd_rec &
-        /res/aromapreinstall/aroma-installer 1 0 "/res/aromapreinstall/aroma-installer-res.zip"
-        rm /cache/update.prop
-    fi
-    umount -l /sdcard
 fi
 
 #continue booting
